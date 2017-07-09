@@ -18,6 +18,7 @@ var SurvivorSchema = new Schema({
             type: String,
             enum: ['M', 'F']
         }],
+        Required: 'Gender'
     },
     latitude: {
         type: String,

@@ -6,9 +6,11 @@ var mongoose = require('mongoose'),
 // To list all the survivors - Working
 exports.listAllSurvivors = function(req, res) {
     Survivor.find({}, function(err, survivor) {
-        if(err)
-            res.send(err);
+
         res.json(survivor);
+    })
+    .catch(err => {
+        res.send(err);
     });
 };
 
@@ -18,26 +20,28 @@ exports.createASurvivor = function(req, res) {
     var newSurvivor = new Survivor(req.body);
 
     newSurvivor.save(function(err, survivor) {
-        if(err)
-            res.send(err);
+
         res.json(survivor);
+    })
+    .catch(err => {
+        res.send(err);
     });
 };
 
 // To see the informations of one survivor - Working
 exports.detailASurvivor = function(req, res) {
     Survivor.findById(req.params.survivorId, function(err, survivor) {
-        if(err)
-            res.send(err);
+
         res.json(survivor);
+    })
+    .catch(err => {
+        res.send(err);
     });
 };
 
 // To update a survivor - Working
 exports.updateASurvivor = function(req, res) {
     Survivor.findById({ _id: req.params.survivorId }, req.body, {new: true}, function(err, survivor) {
-        if(err)
-            res.send(err);
 
         // Only latitude and longitude must be updated
         if(req.body.latitude != null)
@@ -48,28 +52,29 @@ exports.updateASurvivor = function(req, res) {
 
         // Saving modifications
         survivor.save(function(err, survivor) {
-            if(err)
-                res.send(err);
+
             res.json(survivor);
         });
+    })
+    .catch(err => {
+        res.send(err);
     });
 };
 
 // To remove a survivor - Working
 exports.deleteASurvivor = function(req, res) {
     Survivor.remove({ _id: req.params.survivorId }, function(err, survivor) {
-        if(err)
-            res.send(err);
         res.json({message: 'Survivor successfully removed'});
-    });
+    })
+    .catch(err => {
+        res.send(err);
+    })
 };
 
 // Will increase the number of reports for one survivor and verify if he's an infected - Working
 exports.reportASurvivor = function(req, res) {
     Survivor.findById({_id: req.params.survivorId}, req.body.reports, {new: true}, function(err, survivor) {
-        if(err)
-            res.send(err);
-        
+
         // Report's incrementation
         survivor.reports++;
 
@@ -78,10 +83,12 @@ exports.reportASurvivor = function(req, res) {
             survivor.infected = true;
         
         survivor.save(function(err, survivor) {
-            if(err)
-                res.send(err);
+
             res.json(survivor);
         });
+    })
+    .catch(err => {
+        res.send(err);
     });
 };
 
@@ -89,21 +96,30 @@ exports.reportASurvivor = function(req, res) {
 // Not working, need to know why
 exports.infos = function(req, res) {
 
+    var total;
+    var infecteds;
+
     Survivor.find().count(function(err, count){
-        var total = count;
+        total = count;
         console.log('total: ' + total);
-    }).then(function(err, count) {
+    })
+    .then(function(err, count) {
         Survivor.find({infected: true}).count(function(err, count) {
-            var infecteds = count;
+            infecteds = count;
             console.log('infecteds: ' + infecteds);
+        })
+        .then(function(err) {
+
+            console.log('infecteds: ' + infecteds);
+
+            res.json({
+                'numOfSurvivors': total,
+                'numOfInfecteds': infecteds,
+                'percentOfInfecteds': 100 * (infecteds/total),
+            });
         });
-    }).then(function(err, infos) {
-        res.json({
-            'numOfSurvivors': total,
-            'numOfInfecteds': infecteds,
-            'percentOfInfecteds': 100 * total/infecteds
-        });
-    }).catch(function(err) {
+    })
+    .catch(function(err) {
         console.log('Promise rejected: ' + err);
         res.send(err);
     });
