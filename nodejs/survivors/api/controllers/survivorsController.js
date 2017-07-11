@@ -115,11 +115,12 @@ exports.infos = function(req, res) {
             res.json({
                 'numOfSurvivors': total,
                 'numOfInfecteds': infecteds,
-                'percentOfInfecteds': 100 * (infecteds/total),
+                'percentOfInfecteds': 100 * infecteds / total,
+                'percentOfSurvivors': 100 * (total - infecteds) / total
             });
         });
     })
-    .catch(function(err) {
+    .catch(err => {
         console.log('Promise rejected: ' + err);
         res.send(err);
     });
