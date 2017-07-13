@@ -48,17 +48,6 @@ exports.createASurvivor = function(req, res) {
 
     newSurvivor.save(function(err, survivor) {
 
-        /* Verification of fields
-        if(survivor.items.water == null)
-            survivor.items.water = 0;
-        if(survivor.items.food == null)
-            survivor.items.food = 0;
-        if(survivor.items.medications == null)
-            survivor.items.medications = 0;
-        if(survivor.items.ammunition == null)
-            survivor.items.ammunition = 0;
-        */
-
         res.json(survivor);
     })
     .catch(err => {
