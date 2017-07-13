@@ -20,13 +20,15 @@ var SurvivorSchema = new Schema({
         }],
         Required: 'Gender'
     },
-    latitude: {
-        type: String,
-        Required: 'Latitude'
+    items: {
+        water: Number,
+        food: Number,
+        medications: Number,
+        ammunition: Number,
     },
-    longitude: {
-        type: String,
-        Required: 'Longitude'
+    location: {
+        latitude: String,
+        longitude: String
     },
     reports: {
         type: Number,

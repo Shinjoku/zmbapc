@@ -3,6 +3,32 @@
 var mongoose = require('mongoose'),
     Survivor = mongoose.model('Survivors');
 
+// Aux functions and constants:-----------------------------------
+const WATER_VALUE = 4;
+const FOOD_VALUE = 3;
+const MEDICATIONS_VALUE = 2;
+const AMMUNITION_VALUE = 1;
+
+// To get number of a item:
+function getNumOfItems(items, name) {
+
+    let keys = Object.keys(items);
+    let total = 0;
+
+    for(let i = 0; i < keys.length; i++){
+        if(keys[i] == name && items[keys[i]] != null){
+            console.log('Name of the item: ', keys[i], ' Amount: ', items[keys[i]]);
+            total += items[keys[i]];
+        }
+    }
+    return total;
+}
+// ---------------------------------------------------------------
+
+
+// Controllers:---------------------------------------------------
+
+
 // To list all the survivors - Working
 exports.listAllSurvivors = function(req, res) {
     Survivor.find({}, function(err, survivor) {
@@ -14,12 +40,24 @@ exports.listAllSurvivors = function(req, res) {
     });
 };
 
+
 // To create a new survivor - Working
 exports.createASurvivor = function(req, res) {
 
     var newSurvivor = new Survivor(req.body);
 
     newSurvivor.save(function(err, survivor) {
+
+        /* Verification of fields
+        if(survivor.items.water == null)
+            survivor.items.water = 0;
+        if(survivor.items.food == null)
+            survivor.items.food = 0;
+        if(survivor.items.medications == null)
+            survivor.items.medications = 0;
+        if(survivor.items.ammunition == null)
+            survivor.items.ammunition = 0;
+        */
 
         res.json(survivor);
     })
@@ -92,32 +130,61 @@ exports.reportASurvivor = function(req, res) {
     });
 };
 
-
-// Not working, need to know why
 exports.infos = function(req, res) {
 
-    var total;
-    var infecteds;
+    Survivor.find().then(survivors => {
 
-    Survivor.find().count(function(err, count){
-        total = count;
-        console.log('total: ' + total);
-    })
-    .then(function(err, count) {
-        Survivor.find({infected: true}).count(function(err, count) {
-            infecteds = count;
-            console.log('infecteds: ' + infecteds);
-        })
-        .then(function(err) {
+        let total = 0;
+        let infecteds = 0;
+        let amountItems = 0;
+        let avg = {
+            'water': 0,
+            'food': 0,
+            'medications': 0,
+            'ammunition': 0
+        }
+        let pointsLost = 0;
 
-            console.log('infecteds: ' + infecteds);
+        for(let survivor of survivors){
+            console.log('Survivor: ' + survivor.name);
 
-            res.json({
-                'numOfSurvivors': total,
-                'numOfInfecteds': infecteds,
-                'percentOfInfecteds': 100 * infecteds / total,
-                'percentOfSurvivors': 100 * (total - infecteds) / total
-            });
+            // Counting total number of survivors and number of infecteds
+            if(survivor.infected)
+                infecteds++;
+            total++;
+
+            // Counting the total amount of items
+            let waters = getNumOfItems(survivor.items, 'water');
+            let foods = getNumOfItems(survivor.items, 'food');
+            let medications = getNumOfItems(survivor.items, 'medications');
+            let ammunitions = getNumOfItems(survivor.items, 'ammunition');
+
+            if(survivor.infected)
+                pointsLost += WATER_VALUE * waters + 
+                              FOOD_VALUE * foods +
+                              MEDICATIONS_VALUE * medications +
+                              AMMUNITION_VALUE * ammunitions;
+            else{
+                avg.water += waters;
+                avg.food += foods;
+                avg.medications += medications;
+                avg.ammunition += ammunitions;
+            }
+        }
+
+        // Making average
+        avg.water = avg.water / (total - infecteds);
+        avg.food = avg.food / (total - infecteds);
+        avg.medications = avg.medications / (total - infecteds);
+        avg.ammunition = avg.ammunition / (total - infecteds);
+
+        res.json({
+            'numOfSurvivors': total,
+            'numOfInfecteds': infecteds,
+            'percentOfSurvivors': 100 * (total - infecteds) / total,
+            'percentOfInfecteds': 100 * infecteds / total,
+            'pointsLost': pointsLost,
+            'avgItemsPerSurvivor': avg
         });
     })
     .catch(err => {
